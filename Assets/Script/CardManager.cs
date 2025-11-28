@@ -58,20 +58,6 @@ public class CardManager : MonoBehaviour
                 BatteleLogText.text = "[준비 상태] 두 카드를 인식시켜 주세요.";
             }
         }
-        else if (game_state_ == eGameState.End)
-        {
-            if (BatteleLogText)
-            {
-                if (winner == 0) // 트럼프 승리
-                {   
-                    BatteleLogText.text = "트럼프 최종 승리!";
-                }
-                else if (winner == 1) // 푸틴 승리
-                {
-                    BatteleLogText.text = "푸틴 최종 승리!";
-                }
-            }
-        }
     }
 
     IEnumerator RollDice()
@@ -98,6 +84,7 @@ public class CardManager : MonoBehaviour
             if (BatteleLogText)
             {
                 BatteleLogText.text = "트럼프 선공! 트럼프의 턴입니다.";
+                currentPlayerTurn = ePlayerTurn.Trump;
             }
         }
         else if (last_trump_dice < last_putin_dice)
@@ -105,6 +92,7 @@ public class CardManager : MonoBehaviour
             if (BatteleLogText)
             {
                 BatteleLogText.text = "푸틴 선공! 푸틴의 턴입니다.";
+                currentPlayerTurn = ePlayerTurn.Putin;
             }
         }
         else
@@ -194,14 +182,24 @@ public class CardManager : MonoBehaviour
         if (putinHP <= 0)
         {
             putinHP = 0;
-            BatteleLogText.text = "트럼프 최종 승리!";
             game_state_ = eGameState.End;
+            if (BatteleLogText)
+            {
+                BatteleLogText.text = "트럼프 최종 승리!";
+                SetActiveModel(obj_Trump, 3);
+                SetActiveModel(obj_Putin,4);
+            }
         }
         else if (trumpHP <= 0)
         {
             trumpHP = 0;
-            BatteleLogText.text = "푸틴 최종 승리!";
             game_state_ = eGameState.End;
+            if (BatteleLogText)
+            {
+                BatteleLogText.text = "푸틴 최종 승리!";
+                SetActiveModel(obj_Trump, 4);
+                SetActiveModel(obj_Putin, 3);
+            }
         }
         else
         {
