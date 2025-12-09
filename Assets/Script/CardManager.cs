@@ -31,7 +31,13 @@ public class CardManager : MonoBehaviour
     public ePlayerTurn currentPlayerTurn;
     
     public int winner = -1; // 0: 트럼프 승리, 1: 푸틴 승리, -1: 진행 중
-    
+
+    public AudioSource sfxSource;      // 효과음을 재생할 AudioSource
+    public AudioClip sfx_Maga;         // "마가"
+    public AudioClip sfx_Hongcha;      // "홍차 건네기"
+    public AudioClip sfx_GwansaeUp;    // "관세up"
+    public AudioClip sfx_BearRip;      // "곰은 사람을 찢어"
+
     void Start()
     {
     }
@@ -67,6 +73,13 @@ public class CardManager : MonoBehaviour
                     "트럼푸와 푸튄 카드를 동시에 카메라에 인식시켜 주세요.";
             }
         }
+    }
+
+    // 공용 효과음 재생 함수
+    void PlaySFX(AudioClip clip)
+    {
+        if (sfxSource != null && clip != null)
+            sfxSource.PlayOneShot(clip);
     }
 
     IEnumerator RollDice()
@@ -154,6 +167,7 @@ public class CardManager : MonoBehaviour
                         "VR 세계에서 러시아산 수입품 관세를 급격히 인상합니다.\n" +
                         "푸튄의 경제 멘탈이 흔들리며 VR HP에 50의 데미지가 들어갑니다.";
                     SetActiveModel(obj_Trump, 1);
+                    PlaySFX(sfx_GwansaeUp);
                     break;
 
                 // 2번 스킬: 비트코인 올리기
@@ -165,6 +179,7 @@ public class CardManager : MonoBehaviour
                         "푸튄의 시스템 안정성이 80만큼 붕괴되고,\n" +
                         "관전자 채팅: \"내 코인까지 같이 맞았는데요? ㅋㅋ\"";
                     SetActiveModel(obj_Trump, 2);
+                    PlaySFX(sfx_Maga);
                     break;
             }
             
@@ -193,6 +208,7 @@ public class CardManager : MonoBehaviour
                         "트럼푸에게 따뜻한 홍차를 건네며 의미심장한 미소를 짓습니다.\n" +
                         "트럼푸의 경계심이 풀리며 자존심에 45의 데미지가 들어갑니다.";
                     SetActiveModel(obj_Putin, 1);
+                    PlaySFX(sfx_Hongcha);
                     break;
 
                 // 2번 스킬: 곰은 사람을 찢어
@@ -203,6 +219,7 @@ public class CardManager : MonoBehaviour
                         "거대한 VR 곰이 소환되어 트럼푸의 아바타를 마구 끌어안고 휘두릅니다.\n" +
                         "트럼푸의 VR HP에 70의 데미지가 꽂히고, 관전자 채팅창이 폭발합니다.";
                     SetActiveModel(obj_Putin, 2);
+                    PlaySFX(sfx_BearRip);
                     break;
             }
             
@@ -284,7 +301,7 @@ public class CardManager : MonoBehaviour
                 "AI 재맹: \"발언권을 쥔 자, 흐름을 뒤집을 시간입니다.\"";
         }
         
-        game_state_ = eGameState.Battle;
+        game_state_ = eGameState.Battle;    
 
         // 각 캐릭터의 0번(기본) 모델을 활성화합니다.
         SetActiveModel(obj_Trump, 0);
