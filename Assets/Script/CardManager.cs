@@ -24,10 +24,18 @@ public class CardManager : MonoBehaviour
     
     public Text BatteleLogText; // 전투 결과를 표시할 UI 텍스트
     
-    public TextMesh trumpHPText;
-    public TextMesh putinHPText;
-    public int trumpHP = 300;
-    public int putinHP = 300;
+    public int trumpHP = 200;
+    public int putinHP = 200;
+    public int trummMaxHP = 200;
+    public int putinMaxHP = 200;
+    
+    public Slider trumpHPSlider;
+    public Slider putinHPSlider;
+    
+    public GameObject[] objectsToControl;
+    public GameObject[] objectToUpper;
+    public GameObject EndGameIMG;
+    
     public ePlayerTurn currentPlayerTurn;
     
     public int winner = -1; // 0: 트럼프 승리, 1: 푸틴 승리, -1: 진행 중
@@ -38,12 +46,35 @@ public class CardManager : MonoBehaviour
     public AudioClip sfx_GwansaeUp;    // "관세up"
     public AudioClip sfx_BearRip;      // "곰은 사람을 찢어"
 
+    private bool battleStarted = false; // 전투 시작 여부를 추적하는 플래그
+    
     void Start()
     {
+        //ActivateObject();
+        //StartCoroutine(AfterGameEnd());
+        //UpperObjects();
     }
 
     void Update()
     {
+        if (trumpHPSlider != null)
+        {
+            trumpHPSlider.value = (float)trumpHP / trummMaxHP;
+        }
+
+        if (putinHPSlider != null)
+        {
+            putinHPSlider.value = (float)putinHP / putinMaxHP;
+        }
+        
+        // 전투 상태로 전환되었고, 아직 버튼을 활성화하지 않았다면
+        if (game_state_ == eGameState.Battle && !battleStarted)
+        {
+            battleStarted = true; // 플래그를 설정하여 중복 호출 방지
+            ActivateObject();
+            UpperObjects();
+            StartCoroutine(RollDice());
+        }
     }
 
     void OnGUI() // 거의 매 프레임마다 호출됨
@@ -57,9 +88,8 @@ public class CardManager : MonoBehaviour
                     "두 거물 카드 인식 완료!\n" +
                     "트럼푸와 푸튄, VR 세계에 공식 접속되었습니다.\n" +
                     "이제 지구 1짱을 가리는 사상 최초의 VR 결승전을 시작합니다.\n" +
-                    "최종결정자 AI '재맹': \"승자는 현실로,\n 패자는 평생 접속 유지입니다.\"";
+                    "최종결정자 AI '재맹'\n \"승자는 현실로, 패자는 평생 접속 유지입니다.\"";
                 game_state_ = eGameState.Battle;
-                StartCoroutine(RollDice());
             }
         }
 
@@ -87,7 +117,7 @@ public class CardManager : MonoBehaviour
         BatteleLogText.text =
             "선공을 정하기 위해 운명 주사위를 굴립니다...\n" +
             "AI 재맹: \"룰은 공정하게, 결과는 냉정하게.\n참가자의 멘탈은… 알아서 챙기세요.\"";
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(2.5f);
 
         int last_trump_dice = 0;
         int last_putin_dice = 0;
@@ -140,7 +170,7 @@ public class CardManager : MonoBehaviour
                     "동점입니다.\n" +
                     "AI 재맹: \"민주주의를 존중해서 한 번 더 굴리겠습니다.\"\n" +
                     "시청자들: \"이 정도면 주사위도 정치적 중립이네 ㅋㅋ\"";
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(3.0f);
                 StartCoroutine(RollDice());
             }
         }
@@ -161,28 +191,28 @@ public class CardManager : MonoBehaviour
             {
                 // 1번 스킬: 러시아 관세 올리기
                 case 1:
-                    damage = 50;
+                    damage = Random.Range(50, 101); // 50~100 사이의 랜덤 데미지
                     BatteleLogText.text =
                         "트럼푸가 스킬 [러시아 관세 올리기]를 사용했습니다!\n" +
                         "VR 세계에서 러시아산 수입품 관세를 급격히 인상합니다.\n" +
-                        "푸튄의 경제 멘탈이 흔들리며 VR HP에 50의 데미지가 들어갑니다.";
+                        "푸튄의 경제 멘탈이 흔들리며 VR HP에 " + damage + "의 데미지가 들어갑니다.";
                     SetActiveModel(obj_Trump, 1);
                     PlaySFX(sfx_GwansaeUp);
                     break;
 
                 // 2번 스킬: 비트코인 올리기
                 case 2:
-                    damage = 80;
+                    damage = Random.Range(50, 101); // 50~100 사이의 랜덤 데미지
                     BatteleLogText.text =
                         "트럼푸가 궁극기 [비트코인 올리기]를 발동했습니다!\n" +
                         "의문의 한 마디로 전 세계 코인 시장이 요동칩니다.\n" +
-                        "푸튄의 시스템 안정성이 80만큼 붕괴되고,\n" +
+                        "푸튄의 시스템 안정성이 " + damage + "만큼 붕괴되고,\n" +
                         "관전자 채팅: \"내 코인까지 같이 맞았는데요? ㅋㅋ\"";
                     SetActiveModel(obj_Trump, 2);
                     PlaySFX(sfx_Maga);
                     break;
             }
-            
+        
             StartCoroutine(ProcessAttack(ePlayerTurn.Trump, damage));
         }
     }
@@ -195,34 +225,34 @@ public class CardManager : MonoBehaviour
         if (game_state_ == eGameState.Battle && currentPlayerTurn == ePlayerTurn.Putin)
         {
             game_state_ = eGameState.Attacking;
-            
+
             int damage = 0;
 
             switch (Tpye)
             {
                 // 1번 스킬: 홍차 건네기
                 case 1:
-                    damage = 45;
+                    damage = Random.Range(50, 101); 
                     BatteleLogText.text =
                         "푸튄이 스킬 [홍차 건네기]를 사용했습니다!\n" +
                         "트럼푸에게 따뜻한 홍차를 건네며 의미심장한 미소를 짓습니다.\n" +
-                        "트럼푸의 경계심이 풀리며 자존심에 45의 데미지가 들어갑니다.";
+                        "트럼푸의 경계심이 풀리며 자존심에 " + damage + "의 데미지가 들어갑니다.";
                     SetActiveModel(obj_Putin, 1);
                     PlaySFX(sfx_Hongcha);
                     break;
 
                 // 2번 스킬: 곰은 사람을 찢어
                 case 2:
-                    damage = 70;
+                    damage = Random.Range(50, 101); 
                     BatteleLogText.text =
                         "푸튄이 궁극기 [곰은 사람을 찢어]를 발동했습니다!\n" +
                         "거대한 VR 곰이 소환되어 트럼푸의 아바타를 마구 끌어안고 휘두릅니다.\n" +
-                        "트럼푸의 VR HP에 70의 데미지가 꽂히고, 관전자 채팅창이 폭발합니다.";
+                        "트럼푸의 VR HP에 " + damage + "의 데미지가 꽂히고, 관전자 채팅창이 폭발합니다.";
                     SetActiveModel(obj_Putin, 2);
                     PlaySFX(sfx_BearRip);
                     break;
             }
-            
+
             StartCoroutine(ProcessAttack(ePlayerTurn.Putin, damage));
         }
     }
@@ -235,16 +265,14 @@ public class CardManager : MonoBehaviour
         {
             putinHP -= damage;
             if (putinHP < 0) putinHP = 0;
-            putinHPText.text = "푸튄\nVR HP: " + putinHP;
         }
         else
         {
             trumpHP -= damage;
             if (trumpHP < 0) trumpHP = 0;
-            trumpHPText.text = "트럼푸\nVR HP: " + trumpHP;
         }
         
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(4f);
 
         // 게임 종료 확인
         if (putinHP <= 0)
@@ -260,6 +288,7 @@ public class CardManager : MonoBehaviour
                     "트럼푸는 VR 세계에서 로그아웃하고 현실로 복귀합니다.";
                 SetActiveModel(obj_Trump, 3);
                 SetActiveModel(obj_Putin, 4);
+                StartCoroutine(AfterGameEnd());
             }
         }
         else if (trumpHP <= 0)
@@ -275,6 +304,7 @@ public class CardManager : MonoBehaviour
                     "트럼푸의 아바타는 VR 세계에 영구 접속 처리됩니다...";
                 SetActiveModel(obj_Trump, 4);
                 SetActiveModel(obj_Putin, 3);
+                StartCoroutine(AfterGameEnd());
             }
         }
         else
@@ -284,6 +314,17 @@ public class CardManager : MonoBehaviour
         }
     }
 
+    IEnumerator AfterGameEnd()
+    {
+        yield return new WaitForSeconds(5f);
+        
+        if (sfxSource != null)
+        {
+            sfxSource.Stop(); // 배경 음악 정지
+        }
+        EndGameIMG.SetActive(true);
+    }
+    
     void SwitchTurn()
     {
         if (currentPlayerTurn == ePlayerTurn.Trump)
@@ -321,4 +362,29 @@ public class CardManager : MonoBehaviour
             characterObject.models[i].SetActive(i == modelIndex);
         }
     }
+    
+    void UpperObjects()
+    {
+        foreach (GameObject obj in objectToUpper)
+        {
+            if (obj != null)
+            {
+                Vector3 pos = obj.transform.position;
+                pos.y += 380; 
+                obj.transform.position = pos;
+            }
+        }
+    }
+    
+    public void ActivateObject()
+    {
+        foreach (GameObject obj in objectsToControl)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(true);
+            }
+        }
+    }
+    
 }
